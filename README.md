@@ -33,6 +33,7 @@ No third-party Python dependencies are needed.
    SHAREPOINT_URL=https://your-public-folder-link
    DOWNLOAD_DIR=Download
    MIRROR_DELETE=true
+   CONFLICT_MODE=latest
    TIMEOUT_SECONDS=90
    ```
 
@@ -73,14 +74,15 @@ python3 sharepoint_public_sync.py --threads 8
 
 ## Configuration
 
-Settings in `.env` provide the defaults; command-line options take precedence.
+Settings in `.env` provide the defaults; command-line options take precedence. Copy `.env.example` to `.env` — it documents every toggle with allowed values and warnings. See below for the full behavior of each setting.
 
-| Setting           | Purpose                                                          | Default    |
-| ----------------- | ---------------------------------------------------------------- | ---------- |
-| `SHAREPOINT_URL`  | Public OneDrive or SharePoint **folder** URL.                    | Required   |
-| `DOWNLOAD_DIR`    | Local destination. Relative paths are based on the `.env` file.  | `Download` |
-| `MIRROR_DELETE`   | `true` keeps an exact mirror; `false` only downloads or updates. | `true`     |
-| `TIMEOUT_SECONDS` | Timeout for each request.                                        | `90`       |
+| Setting           | Purpose                                                                 | Default    |
+| ----------------- | ----------------------------------------------------------------------- | ---------- |
+| `SHAREPOINT_URL`  | Public OneDrive or SharePoint **folder** URL (required).                 | Required   |
+| `DOWNLOAD_DIR`    | Local destination. Relative paths are based on the `.env` file.          | `Download` |
+| `MIRROR_DELETE`   | `true` = exact mirror (deletes local extras); `false` = additive backup. | `true`     |
+| `CONFLICT_MODE`   | How to resolve a locally edited file: `latest`, `cloud`, or `keep_both`. | `latest`   |
+| `TIMEOUT_SECONDS` | Timeout (seconds) for each SharePoint request; positive integer.         | `90`       |
 
 | Option                 | Purpose                                                 |
 | ---------------------- | ------------------------------------------------------- |
@@ -89,12 +91,28 @@ Settings in `.env` provide the defaults; command-line options take precedence.
 | `--destination <path>` | Override `DOWNLOAD_DIR`.                                |
 | `--dry-run`            | List downloads and deletions without changing files.    |
 | `--no-delete`          | Do not remove local files for this run.                 |
-| `--threads <number>`   | Number of parallel downloads; default: `4`.             |
+| `--threads <number>`   | Number of parallel downloads; default: `4`, min `1`.    |
 | `--exclude <pattern>`  | Exclude a pattern; repeat the option for more patterns. |
+
+### `CONFLICT_MODE` scenarios
+
+A conflict exists when a local file is present but does not match the version the tool last downloaded from the share — the local size differs, or the cloud copy was updated (different eTag/last-modified). This includes pre-existing files on the very first run, when no version has been recorded yet. Missing files are always downloaded and up-to-date files are always skipped, regardless of `CONFLICT_MODE`.
+
+| Mode        | Local file is older than cloud            | Local file is newer than cloud                | Cloud date unknown            | Local edit that kept the same size |
+| ----------- | ----------------------------------------- | --------------------------------------------- | ----------------------------- | ---------------------------------- |
+| `latest`    | Download cloud, overwrite local           | Keep local, no download                       | Keep local (safe)             | Not detected (`unchanged`)         |
+| `cloud`     | Download cloud, overwrite local           | Download cloud, overwrite local (edit lost)   | Download cloud (edit lost)    | Not detected (`unchanged`)         |
+| `keep_both` | Rename local to `-modified_locally`, download cloud | Rename local, download cloud          | Rename local, download cloud  | Not detected (`unchanged`)         |
+
+- `latest` (default): compares the local file's modification time against `lastModifiedDateTime` of the cloud copy. If the cloud date can't be parsed, the local file is kept rather than risk losing an edit.
+- `cloud`: always downloads the cloud copy and overwrites the local file — a strict, deterministic mirror.
+- `keep_both`: renames the local file to `<name>-modified_locally.<ext>`, appending `-1`, `-2`, … if that name is taken, then downloads the cloud copy under the original name. Renamed copies are never deleted, even with `MIRROR_DELETE=true`, and survive repeated runs.
+- A local edit that leaves the file size unchanged is indistinguishable from an up-to-date download and is treated as `unchanged`.
+- Values are case-insensitive (`LATEST`, `cloud`, `KEEP_BOTH` are all accepted); anything else stops with a clear error.
 
 ## Before you sync
 
-`MIRROR_DELETE=true` means the destination is treated as a mirror. Files in that folder that are not in the shared folder may be removed. Use `--dry-run` before the first run, or use `--no-delete` if you only want additive backups.
+`MIRROR_DELETE=true` means the destination is treated as a mirror. Files in that folder that are not in the shared folder may be removed. Preserved `-modified_locally` copies (from `CONFLICT_MODE=keep_both`) are never removed. Use `--dry-run` before the first run, or use `--no-delete` if you only want additive backups.
 
 The `.env` file can contain a private sharing link. Keep it out of version control; the included `.gitignore` is set up for that.
 
@@ -114,7 +132,7 @@ Run with `--dry-run` to see the planned work. Files marked `unchanged` exist loc
 
 **A local edit was not downloaded again**
 
-The tool detects local edits that change the file size. An edit that preserves the exact same size cannot be detected because the saved version marker describes the SharePoint copy, not the local file's contents. Delete that local file to force a fresh download.
+A local edit that leaves the file size unchanged cannot be detected, because the saved version marker describes the SharePoint copy, not the local file's contents — the file is reported `unchanged`. Delete that local file to force a fresh download. For size-changing edits, `CONFLICT_MODE` (see above) decides what happens.
 
 ## For developers
 

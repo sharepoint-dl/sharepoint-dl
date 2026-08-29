@@ -5,3 +5,4 @@
 Download/
 *.sharepoint-sync-state.json
 sharepoint-sync.log
+__pycache__/
