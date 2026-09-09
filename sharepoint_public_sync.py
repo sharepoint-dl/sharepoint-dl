@@ -430,7 +430,7 @@ def main() -> None:
     if timeout < 1:
         raise RuntimeError("TIMEOUT_SECONDS must be a positive integer")
     delete_missing = (
-        bool_value(settings.get("MIRROR_DELETE", "true"), "MIRROR_DELETE")
+        bool_value(settings.get("MIRROR_DELETE", "false"), "MIRROR_DELETE")
         and not args.no_delete
     )
     conflict_mode = settings.get("CONFLICT_MODE", "latest").strip().lower()
