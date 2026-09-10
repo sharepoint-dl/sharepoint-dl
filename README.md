@@ -2,7 +2,7 @@
 
 Mirror a publicly shared OneDrive or SharePoint folder to your computer—no Microsoft account, packages, or browser automation required.
 
-> Want a one-time ZIP download instead? Try the [web downloader](https://onedrive-dl.github.io). This repository is the better fit for repeatable local backups and command-line workflows.
+> Want a one-time ZIP download instead? Try the [web downloader](https://sharepoint-dl.github.io). This repository is the better fit for repeatable local backups and command-line workflows.
 
 ## What it does
 
