@@ -13,13 +13,13 @@ Public folder link → shared-folder metadata → recursive file listing
 
 ## Key pieces
 
-| Area                          | Responsibility                                                                             |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `SharePointClient`            | Requests, cookies, retry/backoff, folder metadata, and downloads.                          |
-| `sync()`                      | Filtering, change detection, conflict resolution, parallel downloads, deletion, and state. |
-| `safe_target()`               | Ensures remote paths cannot write outside the selected destination.                        |
-| `is_current()`/`has_divergence()` | Decide whether a local file matches the recorded cloud version, or conflicts with it.  |
-| `.sharepoint-sync-state.json` | Stores each file's remote eTag and last-modified timestamp for incremental syncs.          |
+| Area                              | Responsibility                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------ |
+| `SharePointClient`                | Requests, cookies, retry/backoff, folder metadata, and downloads.                          |
+| `sync()`                          | Filtering, change detection, conflict resolution, parallel downloads, deletion, and state. |
+| `safe_target()`                   | Ensures remote paths cannot write outside the selected destination.                        |
+| `is_current()`/`has_divergence()` | Decide whether a local file matches the recorded cloud version, or conflicts with it.      |
+| `.sharepoint-sync-state.json`     | Stores each file's remote eTag and last-modified timestamp for incremental syncs.          |
 
 ## Local development
 

@@ -23,31 +23,31 @@ No third-party Python dependencies are needed.
 1. Download this repository, or save `sharepoint_public_sync.py` and `.env.example` in the same folder.
 2. Create your private configuration file:
 
-   ```bash
-   cp .env.example .env
-   ```
+    ```bash
+    cp .env.example .env
+    ```
 
 3. Edit `.env` and add the public folder URL:
 
-   ```env
-   SHAREPOINT_URL=https://your-public-folder-link
-   DOWNLOAD_DIR=Download
-   MIRROR_DELETE=true
-   CONFLICT_MODE=latest
-   TIMEOUT_SECONDS=90
-   ```
+    ```env
+    SHAREPOINT_URL=https://your-public-folder-link
+    DOWNLOAD_DIR=Download
+    MIRROR_DELETE=true
+    CONFLICT_MODE=latest
+    TIMEOUT_SECONDS=90
+    ```
 
 4. Check the planned changes first:
 
-   ```bash
-   python3 sharepoint_public_sync.py --dry-run
-   ```
+    ```bash
+    python3 sharepoint_public_sync.py --dry-run
+    ```
 
 5. Run the sync:
 
-   ```bash
-   python3 sharepoint_public_sync.py
-   ```
+    ```bash
+    python3 sharepoint_public_sync.py
+    ```
 
 Your files are saved to `DOWNLOAD_DIR`. The tool also creates `.sharepoint-sync-state.json` there to record each downloaded file's SharePoint version marker (eTag, or modification timestamp when an eTag is unavailable).
 
@@ -76,8 +76,8 @@ python3 sharepoint_public_sync.py --threads 8
 
 Settings in `.env` provide the defaults; command-line options take precedence. Copy `.env.example` to `.env` — it documents every toggle with allowed values and warnings. See below for the full behavior of each setting.
 
-| Setting           | Purpose                                                                 | Default    |
-| ----------------- | ----------------------------------------------------------------------- | ---------- |
+| Setting           | Purpose                                                                  | Default    |
+| ----------------- | ------------------------------------------------------------------------ | ---------- |
 | `SHAREPOINT_URL`  | Public OneDrive or SharePoint **folder** URL (required).                 | Required   |
 | `DOWNLOAD_DIR`    | Local destination. Relative paths are based on the `.env` file.          | `Download` |
 | `MIRROR_DELETE`   | `true` = exact mirror (deletes local extras); `false` = additive backup. | `true`     |
@@ -98,11 +98,11 @@ Settings in `.env` provide the defaults; command-line options take precedence. C
 
 A conflict exists when a local file is present but does not match the version the tool last downloaded from the share — the local size differs, or the cloud copy was updated (different eTag/last-modified). This includes pre-existing files on the very first run, when no version has been recorded yet. Missing files are always downloaded and up-to-date files are always skipped, regardless of `CONFLICT_MODE`.
 
-| Mode        | Local file is older than cloud            | Local file is newer than cloud                | Cloud date unknown            | Local edit that kept the same size |
-| ----------- | ----------------------------------------- | --------------------------------------------- | ----------------------------- | ---------------------------------- |
-| `latest`    | Download cloud, overwrite local           | Keep local, no download                       | Keep local (safe)             | Not detected (`unchanged`)         |
-| `cloud`     | Download cloud, overwrite local           | Download cloud, overwrite local (edit lost)   | Download cloud (edit lost)    | Not detected (`unchanged`)         |
-| `keep_both` | Rename local to `-modified_locally`, download cloud | Rename local, download cloud          | Rename local, download cloud  | Not detected (`unchanged`)         |
+| Mode        | Local file is older than cloud                      | Local file is newer than cloud              | Cloud date unknown           | Local edit that kept the same size |
+| ----------- | --------------------------------------------------- | ------------------------------------------- | ---------------------------- | ---------------------------------- |
+| `latest`    | Download cloud, overwrite local                     | Keep local, no download                     | Keep local (safe)            | Not detected (`unchanged`)         |
+| `cloud`     | Download cloud, overwrite local                     | Download cloud, overwrite local (edit lost) | Download cloud (edit lost)   | Not detected (`unchanged`)         |
+| `keep_both` | Rename local to `-modified_locally`, download cloud | Rename local, download cloud                | Rename local, download cloud | Not detected (`unchanged`)         |
 
 - `latest` (default): compares the local file's modification time against `lastModifiedDateTime` of the cloud copy. If the cloud date can't be parsed, the local file is kept rather than risk losing an edit.
 - `cloud`: always downloads the cloud copy and overwrites the local file — a strict, deterministic mirror.
